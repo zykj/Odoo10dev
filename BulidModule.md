@@ -426,12 +426,14 @@ openacademy/views/openacademy.xml
 
 基础视图
 
-Views define the way the records of a model are displayed. Each type of view represents a mode of visualization (a list of records, a graph of their aggregation, …). Views can either be requested generically via their type (e.g. a list of partners) or specifically via their id. For generic requests, the view with the correct type and the lowest priority will be used (so the lowest-priority view of each type is the default view for that type).
+视图定义了显示模型记录的方式。 每种类型的视图都表示可视化的模式（记录列表，其聚合图，...）。 视图可以通过其类型（例如，合作伙伴列表）或特别通过其ID来一般请求。 对于通用请求，将使用具有正确类型和最低优先级的视图（因此每种类型的最低优先级视图是该类型的默认视图）。
 
-View inheritance allows altering views declared elsewhere (adding or removing content).
+视图继承允许更改其他地方声明的视图（添加或删除内容）。
 
-Generic view declaration
-A view is declared as a record of the model ir.ui.view. The view type is implied by the root element of the arch field:
+通用视图声明
+视图被声明为ir.ui.view模型的记录。 视图类型由arch字段的根元素默示：
+
+```xml
 
 <record model="ir.ui.view" id="view_id">
     <field name="name">view.name</field>
@@ -441,24 +443,32 @@ A view is declared as a record of the model ir.ui.view. The view type is implied
         <!-- view content: <form>, <tree>, <graph>, ... -->
     </field>
 </record>
-Danger
+```
 
-The view's content is XML.
-The arch field must thus be declared as type="xml" to be parsed correctly.
-Tree views
-Tree views, also called list views, display records in a tabular form.
+提示：
 
-Their root element is <tree>. The simplest form of the tree view simply lists all the fields to display in the table (each field as a column):
+视图的内容是XML.
+arch字段必须以type="xml"声明才能被正确解析。 
 
+列表视图
+树形视图，也成为列表视图Tree views, also called list views,以表格显示记录
+
+根元素为`<tree>` . 最简单的树形视图只是列出要在表中显示的所有字段（每个字段为一列）:
+
+```xml
 <tree string="Idea list">
     <field name="name"/>
     <field name="inventor_id"/>
 </tree>
-Form views
-Forms are used to create and edit single records.
+```
 
-Their root element is <form>. They are composed of high-level structure elements (groups, notebooks) and interactive elements (buttons and fields):
+表单视图
 
+表单用于创建和编辑单条记录。
+
+根元素为 `<form>` . 它们由高级结构元素（组，notebooks）和交互元素（按钮和字段）组成：
+
+```xml
 <form string="Idea form">
     <group colspan="4">
         <group colspan="2" col="2">
@@ -482,11 +492,16 @@ Their root element is <form>. They are composed of high-level structure elements
         <field name="state"/>
     </group>
 </form>
-Exercise
+```
 
-Customise form view using XML
-Create your own form view for the Course object. Data displayed should be: the name and the description of the course.
+练习
+
+使用XML自定义表单视图
+为Course对象创建表单视图。显示的数据是：课程的名称和描述.
+
 openacademy/views/openacademy.xml
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
@@ -508,12 +523,19 @@ openacademy/views/openacademy.xml
         <!-- window action -->
         <!--
             The following tag is an action definition for a "window action",
-Exercise
+-->
+
+```
+
+练习
 
 Notebooks
-In the Course form view, put the description field under a tab, such that it will be easier to add other tabs later, containing additional information.
-Modify the Course form view as follows:
-openacademy/views/openacademy.xml
+
+在Course课程的表单视图中，把描述字段放到tab中，这样便于日后增加包含额外信息的其它tab.:
+
+修改 openacademy/views/openacademy.xml 文件：
+
+```xml
                     <sheet>
                         <group>
                             <field name="name"/>
@@ -529,8 +551,11 @@ openacademy/views/openacademy.xml
                     </sheet>
                 </form>
             </field>
+```
+
 Form views can also use plain HTML for more flexible layouts:
 
+```xml
 <form string="Idea Form">
     <header>
         <button string="Confirm" type="object" name="action_confirm"
@@ -552,23 +577,30 @@ Form views can also use plain HTML for more flexible layouts:
         </group>
     </sheet>
 </form>
-Search views
-Search views customize the search field associated with the list view (and other aggregated views). Their root element is <search> and they're composed of fields defining which fields can be searched on:
+```
 
+搜索视图
+
+搜索视图自定义与列表视图（和其他聚合视图）关联的搜索字段 。它们的根元素是 `<search>`  由定义可搜索那些字段组成:
+
+```xml
 <search>
     <field name="name"/>
     <field name="inventor_id"/>
 </search>
-If no search view exists for the model, Odoo generates one which only allows searching on the name field.
+```
 
-Exercise
+如果没有定义搜索视图，则只能搜索名称字段。
 
-Search courses
-Allow searching for courses based on their title or their description.
+练习
+
+搜索courses
+允许按标题或者描述搜索courses课程。
+
 openacademy/views/openacademy.xml
-            </field>
-        </record>
 
+
+```xml
         <record model="ir.ui.view" id="course_search_view">
             <field name="name">course.search</field>
             <field name="model">openacademy.course</field>
@@ -583,18 +615,24 @@ openacademy/views/openacademy.xml
         <!-- window action -->
         <!--
             The following tag is an action definition for a "window action",
-Relations between models
-A record from a model may be related to a record from another model. For instance, a sale order record is related to a client record that contains the client data; it is also related to its sale order line records.
+-->
+```
 
-Exercise
+模型间关系
 
-Create a session model
-For the module Open Academy, we consider a model for sessions: a session is an occurrence of a course taught at a given time for a given audience.
-Create a model for sessions. A session has a name, a start date, a duration and a number of seats. Add an action and a menu item to display them. Make the new model visible via a menu item.
-Create the class Session in openacademy/models/models.py.
-Add access to the session object in openacademy/view/openacademy.xml.
-openacademy/models.py
+来自模型的记录可能与另一个模型的记录有关。 例如，销售订单记录与包含客户端数据的客户端记录有关; 它也与其销售订单行记录有关。
 
+练习
+
+创建会话模型session model
+在Open Academy中,我们考虑到: 在一定时间内为一定的听众教授课程而产生会话。
+创建会话模型。会话有名称，开始日期，持续时间和席位. 并增加动作和菜单。
+在 openacademy/models/models.py 创建class Session.
+在 openacademy/view/openacademy.xml 增加对session会话对象的访问 
+
+openacademy/models.py文件：
+
+```python
     name = fields.Char(string="Title", required=True)
     description = fields.Text()
 
@@ -606,7 +644,11 @@ class Session(models.Model):
     start_date = fields.Date()
     duration = fields.Float(digits=(6, 2), help="Duration in days")
     seats = fields.Integer(string="Number of seats")
-openacademy/views/openacademy.xml
+```
+
+openacademy/views/openacademy.xml 文件
+
+```xml
         <!-- Full id location:
              action="openacademy.course_list_action"
              It is not required when it is the same module -->
@@ -641,6 +683,9 @@ openacademy/views/openacademy.xml
                   action="session_list_action"/>
     </data>
 </odoo>
+
+```
+
 Note
 
 digits=(6, 2) specifies the precision of a float number: 6 is the total number of digits, while 2 is the number of digits after the comma. Note that it results in the number digits before the comma is a maximum 4
