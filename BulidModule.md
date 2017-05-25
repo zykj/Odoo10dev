@@ -211,7 +211,7 @@ Odoo中有个关键组件是ORM层。它让我们不用去写大部分SQL并提�
 
 业务对象以Pyhon类声明，扩展模型将它们集成到自动持久的系统中。Business objects are declared as Python classes extending Model which integrates them into the automated persistence system.
 
-可以通过在定义中设置多个属性来配置模型。最重要的属性是 _name 是必填项，用来定义在系统中的模型名。下面是定义一个完整模型的最小化代码 :
+可以通过在定义中设置多个属性来配置模型。最重要的属性是 _name 它是必填项，用来定义在系统中的模型名。下面是定义一个完整模型的最小化代码 :
 
 ```python
 from odoo import models
@@ -247,36 +247,37 @@ UI用户界面中的字段标注（）The label of the field in UI (visible by u
 - help (unicode, default: '')
 Long-form, 提供UI用户界面中的帮助提示 .
 - index (bool, default: False)
-Requests that Odoo create a database index on the column.
+为此列在数据库上创建索引。Requests that Odoo create a database index on the column.
 
-Simple fields
-There are two broad categories of fields: "simple" fields which are atomic values stored directly in the model's table and "relational" fields linking records (of the same model or of different models).
+简单字段Simple fields
+字段有2个大类： "简单simple" 字段将原始值直接存储在模型的表中，"relational关系" 字段链接记录 (在同一个模型或不同的模型中
 
-Example of simple fields are Boolean, Date, Char.
+简单字段的例子有布尔，日期，文本。
 
-Reserved fields
-Odoo creates a few fields in all models1. These fields are managed by the system and shouldn't be written to. They can be read if useful or necessary:
+保留字段Reserved fields
+Odoo会为所有模型创建一些字段，这些字段通过系统管理，如果有必要可以被读出但不应被写入。 
 
 id (Id)
-The unique identifier for a record in its model.
+用于模型中记录的唯一标识The unique identifier for a record in its model.
 create_date (Datetime)
-Creation date of the record.
+记录的创建时间Creation date of the record.
 create_uid (Many2one)
-User who created the record.
+创建记录的人User who created the record.
 write_date (Datetime)
-Last modification date of the record.
+记录最新的更新日期Last modification date of the record.
 write_uid (Many2one)
-user who last modified the record.
-Special fields
-By default, Odoo also requires a name field on all models for various display and search behaviors. The field used for these purposes can be overridden by setting _rec_name.
+最新更新纪录的人user who last modified the record.
 
-Exercise
+特殊字段Special fields
+By default,在所有模型中Odoo需要一个name名称字段用于显示和搜索。可以通过设置_rec_name 来覆盖这个名称字段.
 
-Define a model
-Define a new data model Course in the openacademy module. A course has a title and a description. Courses must have a title.
-Edit the file openacademy/models/models.py to include a Course class.
-openacademy/models.py
+练习
 
+定义一个模型
+在openacademy模块中定义一个新的数据模型Course. course有标题和描述. 其中标题是必须的。
+编辑 openacademy/models/models.py 以包括类Course.
+
+```python
 from odoo import models, fields, api
 
 class Course(models.Model):
@@ -284,14 +285,18 @@ class Course(models.Model):
 
     name = fields.Char(string="Title", required=True)
     description = fields.Text()
-Data files
-Odoo is a highly data driven system. Although behavior is customized using Python code part of a module's value is in the data it sets up when loaded.
+```
 
-Tip
+数据文件
+
+Odoo是高度数据驱动的系统. 虽然行为通过Python代码定义，模块值的部分则在加载时的数据文件中。
+
+提示
 
 some modules exist solely to add data into Odoo
-Module data is declared via data files, XML files with <record> elements. Each <record> element creates or updates a database record.
+Module data is declared via data files, XML 文件的 `<record>` 元素. 每个 `<record> ` 元素都会创建或更新数据记录 。
 
+```xml
 <odoo>
     <data>
         <record model="{model name}" id="{record identifier}">
@@ -299,17 +304,19 @@ Module data is declared via data files, XML files with <record> elements. Each <
         </record>
     </data>
 </odoo>
-model is the name of the Odoo model for the record.
-id is an external identifier, it allows referring to the record (without having to know its in-database identifier).
-<field> elements have a name which is the name of the field in the model (e.g. description). Their body is the field's value.
-Data files have to be declared in the manifest file to be loaded, they can be declared in the 'data' list (always loaded) or in the 'demo' list (only loaded in demonstration mode).
+```
 
-Exercise
+model模型是Odoo中记录所属的模型，id是外部标识, 它允许referring到记录 (无需知道它的数据库中的标识).
+`<field> ` 元素有个name名称,是字段在模型中的名称 (e.g. 例如description描述). Their body主体是字段的值.
+数据文件需要在证明文件中声明才会被加载, 在 'data' list列表中声明 (data键中的数据总是会被加载) 或者在'demo' list (只会在勾选了演示数据的数据库实例中加载).
 
-Define demonstration data
-Create demonstration data filling the Courses model with a few demonstration courses.
-Edit the file openacademy/demo/demo.xml to include some data.
-openacademy/demo.xml
+练习
+
+定义演示数据文件
+为Courses模型创建演示文件包含一些演示课程.
+编辑 openacademy/demo/demo.xml 文件：
+
+```xml
 <odoo>
     <data>
         <record model="openacademy.course" id="course0">
@@ -329,14 +336,19 @@ Can have multiple lines
         </record>
     </data>
 </odoo>
-Actions and Menus
-Actions and menus are regular records in database, usually declared through data files. Actions can be triggered in three ways:
+```
 
-by clicking on menu items (linked to specific actions)
-by clicking on buttons in views (if these are connected to actions)
-as contextual actions on object
-Because menus are somewhat complex to declare there is a <menuitem> shortcut to declare an ir.ui.menu and connect it to the corresponding action more easily.
+> 效果是创建了3条记录，记录的name值分别为Course 0，Course 1，Course 2，0和2，还有描述值。
 
+动作和菜单
+动作和菜单是数据库中常见的记录，常通过数据文件声明。动作可以通过三种方法触发 :
+
+- 通过点击菜单 (链接到指定的动作)
+- 通过点击视图上的按钮 (连接到动作)
+- 作为对象的上下文动作
+由于菜单相对复杂 因此有一个 `<menuitem> `快捷键， 声明用于ir.ui.menu 模型，并连接到对应的动作 。
+
+```xml
 <record model="ir.actions.act_window" id="action_list_ideas">
     <field name="name">Ideas</field>
     <field name="res_model">idea.idea</field>
@@ -344,19 +356,24 @@ Because menus are somewhat complex to declare there is a <menuitem> shortcut to 
 </record>
 <menuitem id="menu_ideas" parent="menu_root" name="Ideas" sequence="10"
           action="action_list_ideas"/>
-Danger
+```
 
-The action must be declared before its corresponding menu in the XML file.
-Data files are executed sequentially, the action's id must be present in the database before the menu can be created.
-Exercise
+提醒
 
-Define new menu entries
-Define new menu entries to access courses under the OpenAcademy menu entry. A user should be able to :
-display a list of all the courses
-create/modify courses
-Create openacademy/views/openacademy.xml with an action and the menus triggering the action
-Add it to the data list of openacademy/__manifest__.py
+在XML文件中动作必须在其对应的菜单之前声明，
+数据文件按会按先后顺序执行, 在数据库中动作的id要在菜单之前呈现。
+
+练习
+
+定义新的菜单项
+在OpenAcademy菜单下定义新的菜单来访问课程. 用户能显示所有课程的列表
+创建/修改课程
+创建 openacademy/views/openacademy.xml 包含菜单以及菜单触发的动作
+增加它到 openacademy/__manifest__.py 的data键中
+
 openacademy/__manifest__.py
+
+```python
     'data': [
         # 'security/ir.model.access.csv',
         'templates.xml',
@@ -364,14 +381,19 @@ openacademy/__manifest__.py
     ],
     # only loaded in demonstration mode
     'demo': [
+],
+```
+
 openacademy/views/openacademy.xml
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-        <!-- window action -->
+        <!-- 窗口动作 -->
         <!--
-            The following tag is an action definition for a "window action",
-            that is an action opening a view or a set of views
+            下面的标签是用于The following tag is an action definition for a "窗口动作",
+            这个动作会打开一个或一组视图
         -->
         <record model="ir.actions.act_window" id="course_list_action">
             <field name="name">Courses</field>
@@ -384,7 +406,7 @@ openacademy/views/openacademy.xml
             </field>
         </record>
 
-        <!-- top level menu: no parent -->
+        <!-- 顶级菜单: 没有父级 -->
         <menuitem id="main_openacademy_menu" name="Open Academy"/>
         <!-- A first level in the left side menu is needed
              before using action= attribute -->
@@ -400,7 +422,10 @@ openacademy/views/openacademy.xml
              It is not required when it is the same module -->
     </data>
 </odoo>
-Basic views
+```
+
+基础视图
+
 Views define the way the records of a model are displayed. Each type of view represents a mode of visualization (a list of records, a graph of their aggregation, …). Views can either be requested generically via their type (e.g. a list of partners) or specifically via their id. For generic requests, the view with the correct type and the lowest priority will be used (so the lowest-priority view of each type is the default view for that type).
 
 View inheritance allows altering views declared elsewhere (adding or removing content).
