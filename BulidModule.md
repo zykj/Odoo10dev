@@ -1,18 +1,21 @@
 [源链接](https://www.odoo.com/documentation/10.0/howtos/backend.html)
 
+注意：本文中的代码可能粘贴不全，有些地方 还需要对照原文。
+
 
 ## 目录
 
 1. [启动/停止Odoo服务](#启动停止服务)
 2. [创建Odoo模块](#创建模块)
 3. [ORM对象关系映射](#对象关系映射)
+4. [继承](#继承)
 
 ##　启动停止服务
 Odoo以Web浏览器作为客户端，通过RPC访问Odoo服务。
 业务逻辑和扩展通常在服务器端执行，也能在客户端得到支持（例如，交互式地图的数据呈现）。
 只需要在shell中使用 `odoo-bin` （可能需要完整路径）就可以启动Odoo，通过在终端点击Ctrl+C两次来停止，或者中止kill对应的系统进程。
 
-**[⬆ 回到目录](#目录)**
+
 
 ## 创建模块
 
@@ -205,6 +208,8 @@ openacademy/templates.xml
 </odoo>
 ```
 
+**[⬆ 回到目录](#目录)**
+
 ## 对象关系映射
 
 Odoo中有个关键组件是ORM层。它让我们不用去写大部分SQL并提供了扩展性和安全性。
@@ -218,6 +223,7 @@ from odoo import models
 class MinimalModel(models.Model):
     _name = 'test.model'
 ```
+
 
 ### 模型字段
 字段用来定义模型的存储及位置。以模型类上的属性定义字段。Fields are used to define what the model can store and where. Fields are defined as attributes on the model class:
@@ -686,45 +692,56 @@ openacademy/views/openacademy.xml 文件
 
 ```
 
-Note
+备注：
 
-digits=(6, 2) specifies the precision of a float number: 6 is the total number of digits, while 2 is the number of digits after the comma. Note that it results in the number digits before the comma is a maximum 4
-Relational fields
-Relational fields link records, either of the same model (hierarchies) or between different models.
+digits=(6, 2) 指定浮点数的精度: 6 是总位数, 而2是逗号后面的位数。 请注意，这样设置，逗号之前的最大位数就为4。
 
-Relational field types are:
+关系字段Relational fields
+关系字段链接相同模型中或者不同模型中的记录，Relational fields link records, either of the same model (hierarchies) or between different models.
 
-Many2one(other_model, ondelete='set null')
-A simple link to an other object:
+关系字段的类型有:
 
+多对一Many2one(other_model, ondelete='set null')
+到其它模型的简单链接 A simple link to an other object:
+
+```python
 print foo.other_id.name
-See also
+```
 
-foreign keys
-One2many(other_model, related_field)
-A virtual relationship, inverse of a Many2one. A One2many behaves as a container of records, accessing it results in a (possibly empty) set of records:
+其他
 
+外键foreign keys
+一对多One2many(other_model, related_field)
+虚拟关系，Many2one的对应关系。A virtual relationship, inverse of a Many2one.  One2many表现为记录的容器，访问它相当于访问一组记录（可能为空） behaves as a container of records, accessing it results in a (possibly empty) set of records:
+
+```python
 for other in foo.other_ids:
     print other.name
 Danger
+```
 
-Because a One2many is a virtual relationship, there must be a Many2one field in the other_model, and its name must be related_field
-Many2many(other_model)
-Bidirectional multiple relationship, any record on one side can be related to any number of records on the other side. Behaves as a container of records, accessing it also results in a possibly empty set of records:
+由于One2many一对多是虚拟关系，必须在other_model中有一个Many2one多对一的字段，它的名称必须是related_field Many2many(other_model)
+双向多重关系，一方的任何记录可以与另一方的任何数量的记录相关。 作为记录的容器，访问它也会导致一组可能为空的记录集：Bidirectional multiple relationship, any record on one side can be related to any number of records on the other side. Behaves as a container of records, accessing it also results in a possibly empty set of records:
 
+```
 for other in foo.other_ids:
     print other.name
 Exercise
+```
 
-Many2one relations
-Using a many2one, modify the Course and Session models to reflect their relation with other models:
-A course has a responsible user; the value of that field is a record of the built-in model res.users.
-A session has an instructor; the value of that field is a record of the built-in model res.partner.
-A session is related to a course; the value of that field is a record of the model openacademy.course and is required.
-Adapt the views.
-Add the relevant Many2one fields to the models, and
-add them in the views.
+多对一关系Many2one relations
+使用many2one多对一字段, 修改Course课程和Session会话模型反映它们和其他模型之间的关系:
+一个课程有一个责任用户；此责任用户字段的值是系统内建模型res.users的一条记录。
+一个会话有一个导师; 此字段的值是内建模型res.partner的一条记录。
+一个会话和一个课程关联；其值是模型openacademy.course的一条记录，而且此字段是必填项.
+
+调整视图.
+
+为模型增加相关的Many2one字段并增加他们到视图中。
+
 openacademy/models.py
+
+```python
     name = fields.Char(string="Title", required=True)
     description = fields.Text()
 
@@ -741,7 +758,11 @@ class Session(models.Model):
     instructor_id = fields.Many2one('res.partner', string="Instructor")
     course_id = fields.Many2one('openacademy.course',
         ondelete='cascade', string="Course", required=True)
+```
+
 openacademy/views/openacademy.xml
+
+```xml
                     <sheet>
                         <group>
                             <field name="name"/>
@@ -801,14 +822,17 @@ openacademy/views/openacademy.xml
         <record model="ir.actions.act_window" id="session_list_action">
             <field name="name">Sessions</field>
             <field name="res_model">openacademy.session</field>
-Exercise
+        </record>
+```
 
-Inverse one2many relations
-Using the inverse relational field one2many, modify the models to reflect the relation between courses and sessions.
-Modify the Course class, and
-add the field in the course form view.
+练习Exercise
+
+one2many关系的对应
+使用对应关系字段one2many,Using the inverse relational field one2many,反映课程和会话直接的关系.修改课程Course class增加字段到course课程的表单视图。
+
 openacademy/models.py
 
+```python
     responsible_id = fields.Many2one('res.users',
         ondelete='set null', string="Responsible", index=True)
     session_ids = fields.One2many(
@@ -816,7 +840,14 @@ openacademy/models.py
 
 
 class Session(models.Model):
+```
+
 openacademy/views/openacademy.xml
+
+```xml
+                        
+                    <sheet>
+                        <notebook>
                             <page string="Description">
                                 <field name="description"/>
                             </page>
@@ -830,18 +861,26 @@ openacademy/views/openacademy.xml
                             </page>
                         </notebook>
                     </sheet>
-Exercise
+```
+
+练习
 
 Multiple many2many relations
-Using the relational field many2many, modify the Session model to relate every session to a set of attendees. Attendees will be represented by partner records, so we will relate to the built-in model res.partner. Adapt the views accordingly.
-Modify the Session class, and
-add the field in the form view.
+
+使用关系字段many2many, 修改Session model模型关联将每个会话与一组与会者相关联. 与会者用res.partner的记录表示，并调整对应的视图.
+修改Session class, 增加字段到表单视图。
+
 openacademy/models.py
+
+```python
     instructor_id = fields.Many2one('res.partner', string="Instructor")
     course_id = fields.Many2one('openacademy.course',
         ondelete='cascade', string="Course", required=True)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
-openacademy/views/openacademy.xml
+```
+openacademy/views/openacademy.xml  （注意，有些代码可能要参考看下官方原文，这里贴的不一定完整）
+
+```xml
                                 <field name="seats"/>
                             </group>
                         </group>
@@ -849,30 +888,39 @@ openacademy/views/openacademy.xml
                         <field name="attendee_ids"/>
                     </sheet>
                 </form>
-            </field>
-Inheritance
-Model inheritance
-Odoo provides two inheritance mechanisms to extend an existing model in a modular way.
+            
+```
 
-The first inheritance mechanism allows a module to modify the behavior of a model defined in another module:
+**[⬆ 回到目录](#目录)**
 
-add fields to a model,
-override the definition of fields on a model,
-add constraints to a model,
-add methods to a model,
-override existing methods on a model.
-The second inheritance mechanism (delegation) allows to link every record of a model to a record in a parent model, and provides transparent access to the fields of the parent record.
+## 继承
+模型继承Model inheritance
+Odoo提供了2种继承机制以模块化的方式来扩展现有模型。
+
+第一种继承机制允许模块修改其他模块中的模型定义:
 
 
-See also
+为模型增加字段,
+覆盖模型中的字段定义,
+增加模型约束,
+为模型增加方法,
+覆盖模型已有的方法.
+
+第二种继承机制 (delegation) 能链接一个模型中所有的记录到父模型的记录，并提供对父记录的字段的透明访问。
+
+
+其他
 
 _inherit
 _inherits
-View inheritance
-Instead of modifying existing views in place (by overwriting them), Odoo provides view inheritance where children "extension" views are applied on top of root views, and can add or remove content from their parent.
 
-An extension view references its parent using the inherit_id field, and instead of a single view its arch field is composed of any number of xpath elements selecting and altering the content of their parent view:
+视图继承
 
+替代直接修改现有的视图（覆盖他们）， Odoo提供了视图继承的方案， 其中子视图“扩展”视图应用于根视图之上, 可以从它们的父级增加或移除内容.
+
+扩展视图通过使用inherit_id字段来引用它们的父级，它的arch字段由任意数量的xpath元素组成，选择和更改其父视图的内容:
+
+```xml
 <!-- improved idea categories list -->
 <record id="idea_category_list2" model="ir.ui.view">
     <field name="name">id.category.list2</field>
@@ -886,24 +934,31 @@ An extension view references its parent using the inherit_id field, and instead 
         </xpath>
     </field>
 </record>
+```
+
 expr
-An XPath expression selecting a single element in the parent view. Raises an error if it matches no element or more than one
-position
+
+XPath表达式选择父视图中的单一元素。如果没有元素匹配或者有多个位置则会引发错误。
+
 Operation to apply to the matched element:
 
 inside
-appends xpath's body at the end of the matched element
+增加 xpath的主体 到匹配元素的结尾
 replace
-replaces the matched element with the xpath's body, replacing any $0 node occurrence in the new body with the original element
+将匹配的元素替换为xpath的正文，使用原始元素替换新主体中的$ 0节点
 before
-inserts the xpath's body as a sibling before the matched element
+在匹配的元素之前插入xpath中的主体
 after
-inserts the xpaths's body as a sibling after the matched element
+在匹配的元素之后插入xpath中的主体
 attributes
+使用xpath的主体中的指定属性元素来更改匹配元素的属性
 alters the attributes of the matched element using special attribute elements in the xpath's body
-Tip
 
-When matching a single element, the position attribute can be set directly on the element to be found. Both inheritances below will give the same result.
+提示
+
+当匹配了单一的元素后，position属性可以直接在发现的元素上设置.两种继承会有相同的结果。
+
+```xml
 <xpath expr="//field[@name='description']" position="after">
     <field name="idea_ids" />
 </xpath>
@@ -911,22 +966,32 @@ When matching a single element, the position attribute can be set directly on th
 <field name="description" position="after">
     <field name="idea_ids" />
 </field>
-Exercise
+```
 
-Alter existing content
-Using model inheritance, modify the existing Partner model to add an instructor boolean field, and a many2many field that corresponds to the session-partner relation
-Using view inheritance, display this fields in the partner form view
-Note
+练习
 
-This is the opportunity to introduce the developer mode to inspect the view, find its external ID and the place to put the new field.
-Create a file openacademy/models/partner.py and import it in __init__.py
-Create a file openacademy/views/partner.xml and add it to __manifest__.py
+改变现有内容
+
+使用模型继承, 修改已有Partner模型增加一个instructor布尔字段,和一个many2many字段对应 session-partner关系。
+使用视图继承，在partner业务伙伴表单视图，显示这些字段。
+
+提示
+
+是时机介绍开发者模式来检查视图，找到它的external ID外部ID,以及放置新字段的位置。
+创建 openacademy/models/partner.py 并在 __init__.py 中import它，
+创建 openacademy/views/partner.xml 并把它增加到 __manifest__.py 中
 openacademy/__init__.py
+
+```python
 # -*- coding: utf-8 -*-
 from . import controllers
 from . import models
 from . import partner
+```
+
 openacademy/__manifest__.py
+
+```python
         # 'security/ir.model.access.csv',
         'templates.xml',
         'views/openacademy.xml',
@@ -934,7 +999,11 @@ openacademy/__manifest__.py
     ],
     # only loaded in demonstration mode
     'demo': [
+    ],
+```
 openacademy/partner.py
+
+```python
 # -*- coding: utf-8 -*-
 from odoo import fields, models
 
@@ -947,7 +1016,12 @@ class Partner(models.Model):
 
     session_ids = fields.Many2many('openacademy.session',
         string="Attended Sessions", readonly=True)
+```
+
+
 openacademy/views/partner.xml
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
  <odoo>
     <data>
@@ -980,26 +1054,39 @@ openacademy/views/partner.xml
                   action="contact_list_action"/>
     </data>
 </odoo>
-Domains
-In Odoo, Domains are values that encode conditions on records. A domain is a list of criteria used to select a subset of a model's records. Each criteria is a triple with a field name, an operator and a value.
+```
 
-For instance, when used on the Product model the following domain selects all services with a unit price over 1000:
+域Domains
 
+在Odoo里, Domains域是记录 条件的值  are values that encode conditions on records. domain域是用于选择模型记录子集的标准列表.每个条件是一个包含字段名以及操作和值的triple元祖.
+
+例如：在产品模型中，要选择所有的单价超过1000的服务类：
+
+```
 [('product_type', '=', 'service'), ('unit_price', '>', 1000)]
-By default criteria are combined with an implicit AND. The logical operators & (AND), | (OR) and ! (NOT) can be used to explicitly combine criteria. They are used in prefix position (the operator is inserted before its arguments rather than between). For instance to select products "which are services OR have a unit price which is NOT between 1000 and 2000":
+```
 
+默认条件为AND.By default criteria are combined with an implicit AND. 可以在domain里使用逻辑运算符 & (AND和), | (OR或) 以及 ! (NOT否) . 它们会用于Domain的开始位置。 (操作符被插入到其参数之前而不是之间). 比如要选择 "是服务类的产品或者 单价不是在 1000到2000之间的产品” :
+
+```
 ['|',
     ('product_type', '=', 'service'),
     '!', '&',
         ('unit_price', '>=', 1000),
         ('unit_price', '<', 2000)]
-A domain parameter can be added to relational fields to limit valid records for the relation when trying to select records in the client interface.
+```
 
-Exercise
+domain参数可用于关系型字段来筛选对应的记录。 parameter can be added to relational fields to limit valid records for the relation when trying to select records in the client interface.
+
+练习
 
 Domains on relational fields
-When selecting the instructor for a Session, only instructors (partners with instructor set to True) should be visible.
+
+为会话选择导师时，限制选择instructor设置为True的partners ：
+
 openacademy/models.py
+
+```python
     duration = fields.Float(digits=(6, 2), help="Duration in days")
     seats = fields.Integer(string="Number of seats")
 
@@ -1008,6 +1095,8 @@ openacademy/models.py
     course_id = fields.Many2one('openacademy.course',
         ondelete='cascade', string="Course", required=True)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
+```
+
 Note
 
 A domain declared as a literal list is evaluated server-side and can't refer to dynamic values on the right-hand side, a domain declared as a string is evaluated client-side and allows field names on the right-hand side
