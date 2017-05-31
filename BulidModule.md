@@ -1097,16 +1097,20 @@ openacademy/models.py
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
 ```
 
-Note
+备注
 
-A domain declared as a literal list is evaluated server-side and can't refer to dynamic values on the right-hand side, a domain declared as a string is evaluated client-side and allows field names on the right-hand side
-Exercise
+文字列表的domian在服务器端评估，无法在右边引用动态的值A domain declared as a literal list is evaluated server-side and can't refer to dynamic values on the right-hand side,以string字符串声明的domain域，在客户端进行评估，允许在右边使用字段名， a domain declared as a string is evaluated client-side and allows field names on the right-hand side
 
-More complex domains
-Create new partner categories Teacher / Level 1 and Teacher / Level 2. The instructor for a session can be either an instructor or a teacher (of any level).
-Modify the Session model's domain
-Modify openacademy/view/partner.xml to get access to Partner categories:
+练习
+
+更复杂的domains
+
+创建新的partner分类教师/ Level 1 and Teacher / Level 2. 会话导师可以是导师或者教师 (of any level).
+修改会话模型的domain
+修改 openacademy/view/partner.xml 以获得Partner分类的访问权:
 openacademy/models.py
+
+```python
     seats = fields.Integer(string="Number of seats")
 
     instructor_id = fields.Many2one('res.partner', string="Instructor",
@@ -1115,7 +1119,10 @@ openacademy/models.py
     course_id = fields.Many2one('openacademy.course',
         ondelete='cascade', string="Course", required=True)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
+```
 openacademy/views/partner.xml
+
+```xml
         <menuitem id="contact_menu" name="Contacts"
                   parent="configuration_menu"
                   action="contact_list_action"/>
@@ -1137,16 +1144,25 @@ openacademy/views/partner.xml
         </record>
     </data>
 </odoo>
-Computed fields and default values
-So far fields have been stored directly in and retrieved directly from the database. Fields can also be computed. In that case, the field's value is not retrieved from the database but computed on-the-fly by calling a method of the model.
+```
 
-To create a computed field, create a field and set its attribute compute to the name of a method. The computation method should simply set the value of the field to compute on every record in self.
 
-Danger
+计算字段和默认值
 
-self is a collection
-The object self is a recordset, i.e., an ordered collection of records. It supports the standard Python operations on collections, like len(self) and iter(self), plus extra set operations like recs1 + recs2.
-Iterating over self gives the records one by one, where each record is itself a collection of size 1. You can access/assign fields on single records by using the dot notation, like record.name.
+到目前为止，字段被直接存储在数据库中并直接从数据库中检索. 字段还可以是计算得出的. 字段值不是从数据库中检索的，而是通过模型中的方法计算得出computed on-the-fly by calling a method of the model.
+
+要创建计算字段，创建字段并以方法名设置它的cpmpute属性To create a computed field, create a field and set its attribute compute to the name of a method.
+ The computation method should simply set the value of the field to compute on every record in self.
+
+危险
+
+self是一个集合self is a collection
+
+对象self是一个记录集,即有序的记录集合. 集合中支持标准的Python操作, 比如len(self) 和iter(self), plus extra set operations like recs1 + recs2.
+
+迭代self Iterating over self gives the records one by one, where each record is itself a collection of size 1.您可以在单个记录上使用 . 访问/分配字段 如同： record.name.
+
+```python
 import random
 from odoo import models, fields, api
 
@@ -1159,9 +1175,13 @@ class ComputedModel(models.Model):
     def _compute_name(self):
         for record in self:
             record.name = str(random.randint(1, 1e6))
-Dependencies
-The value of a computed field usually depends on the values of other fields on the computed record. The ORM expects the developer to specify those dependencies on the compute method with the decorator depends(). The given dependencies are used by the ORM to trigger the recomputation of the field whenever some of its dependencies have been modified:
+```
 
+Dependencies
+
+计算字段的值通常依赖于其他字段记录的计算。 ORM预期开发者通过depends()装饰器指定这些计算方法中依赖的字段 expects the developer to specify those dependencies on the compute method with the decorator depends(). The given dependencies are used by the ORM to trigger the recomputation of the field whenever some of its dependencies have been modified:
+
+```python
 from odoo import models, fields, api
 
 class ComputedModel(models.Model):
@@ -1174,7 +1194,9 @@ class ComputedModel(models.Model):
     def _compute_name(self):
         for record in self:
             record.name = "Record with value %s" % record.value
-Exercise
+```
+
+练习
 
 Computed fields
 Add the percentage of taken seats to the Session model
