@@ -1120,6 +1120,7 @@ openacademy/models.py
         ondelete='cascade', string="Course", required=True)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
 ```
+
 openacademy/views/partner.xml
 
 ```xml
@@ -1198,13 +1199,15 @@ class ComputedModel(models.Model):
 
 练习
 
-Computed fields
-Add the percentage of taken seats to the Session model
-Display that field in the tree and form views
-Display the field as a progress bar
-Add a computed field to Session
-Show the field in the Session view:
+计算字段
+为Session模型增加已用座位的百分比，
+在列表和表单视图以进度条显示此字段，
+为Session回话增加一个计算字段
+在Session视图显示此字段:
+
 openacademy/models.py
+
+```python
     course_id = fields.Many2one('openacademy.course',
         ondelete='cascade', string="Course", required=True)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
@@ -1218,7 +1221,11 @@ openacademy/models.py
                 r.taken_seats = 0.0
             else:
                 r.taken_seats = 100.0 * len(r.attendee_ids) / r.seats
+```
+
 openacademy/views/openacademy.xml
+
+```xml
                                 <field name="start_date"/>
                                 <field name="duration"/>
                                 <field name="seats"/>
@@ -1233,26 +1240,35 @@ openacademy/views/openacademy.xml
                 </tree>
             </field>
         </record>
-Default values
-Any field can be given a default value. In the field definition, add the option default=X where X is either a Python literal value (boolean, integer, float, string), or a function taking a recordset and returning a value:
+```
 
+默认值
+所有字段都可以给一个默认值，在字段定义中，增加default=X的选项，X is either a Python literal value (boolean, integer, float, string), X也可以是从记录集的返回的函数or a function taking a recordset and returning a value:
+
+```python
 name = fields.Char(default="Unknown")
 user_id = fields.Many2one('res.users', default=lambda self: self.env.user)
+```
+
 Note
 
-The object self.env gives access to request parameters and other useful things:
-self.env.cr or self._cr is the database cursor object; it is used for querying the database
-self.env.uid or self._uid is the current user's database id
-self.env.user is the current user's record
-self.env.context or self._context is the context dictionary
-self.env.ref(xml_id) returns the record corresponding to an XML id
-self.env[model_name] returns an instance of the given model
-Exercise
+对象self.env 允许访问请求参数和其它有用的事gives access to request parameters and other useful things:
+self.env.cr 或 self._cr 是数据库指针对象 is the database cursor object;用于查询数据库
+self.env.uid 或 self._uid 是当前用户的数据库id
+self.env.user 是当前用户的记录 is the current user's record
+self.env.context 或 self._context 是上下文词典 is the context dictionary
+self.env.ref(xml_id) 返回xml id对应的 记录returns the record corresponding to an XML id
+self.env[model_name] 返回给定模型的实例 returns an instance of the given model
+
+练习
 
 Active objects – Default values
-Define the start_date default value as today (see Date).
-Add a field active in the class Session, and set sessions as active by default.
+定义 start_date 的默认值为今天 (see Date).
+为Session增加字段active,设置默认值为True
+
 openacademy/models.py
+
+```python
     _name = 'openacademy.session'
 
     name = fields.Char(required=True)
@@ -1263,7 +1279,10 @@ openacademy/models.py
 
     instructor_id = fields.Many2one('res.partner', string="Instructor",
         domain=['|', ('instructor', '=', True),
+```
+
 openacademy/views/openacademy.xml
+```xml
                                 <field name="course_id"/>
                                 <field name="name"/>
                                 <field name="instructor_id"/>
@@ -1271,18 +1290,25 @@ openacademy/views/openacademy.xml
                             </group>
                             <group string="Schedule">
                                 <field name="start_date"/>
-Note
+```
 
-Odoo has built-in rules making fields with an active field set to False invisible.
+注意
+
+Odoo内建规则中，active如果设置为False则隐藏 has built-in rules making fields with an active field set to False invisible.
+
 Onchange
-The "onchange" mechanism provides a way for the client interface to update a form whenever the user has filled in a value in a field, without saving anything to the database.
+ "onchange" 为客户端界面提供一种方式，只要用户填写了一个字段中的值，就可以更新表单，而不保存任何数据
 
-For instance, suppose a model has three fields amount, unit_price and price, and you want to update the price on the form when any of the other fields is modified. To achieve this, define a method where self represents the record in the form view, and decorate it with onchange() to specify on which field it has to be triggered. Any change you make on self will be reflected on the form.
+比如，假设模型有3个字段，amount, unit_price 和 price, 您希望在其它字段发生变化时更新price字段 . 为了实现这一点，定义一个方法，其中self表示窗体视图中的记录，并用 onchange() 定义触发的字段.您在 self所做的任何改变都会反映在表单上
 
+```xml
 <!-- content of form view -->
 <field name="amount"/>
 <field name="unit_price"/>
 <field name="price" readonly="1"/>
+```
+
+```python
 # onchange handler
 @api.onchange('amount', 'unit_price')
 def _onchange_price(self):
@@ -1295,13 +1321,20 @@ def _onchange_price(self):
             'message': "It was very bad indeed",
         }
     }
-For computed fields, valued onchange behavior is built-in as can be seen by playing with the Session form: change the number of seats or participants, and the taken_seats progressbar is automatically updated.
+```
 
-Exercise
+对于计算字段，onchange可以用于Session表单: 改变座位数量 或者参与者，taken_seats进度条会自动更新
 
-Warning
-Add an explicit onchange to warn about invalid values, like a negative number of seats, or more participants than seats.
+练习
+
+警告
+
+为无效的值增加警告提示，比如负数或者参与者数量多于座位
+
 openacademy/models.py
+
+```python
+
                 r.taken_seats = 0.0
             else:
                 r.taken_seats = 100.0 * len(r.attendee_ids) / r.seats
@@ -1322,11 +1355,15 @@ openacademy/models.py
                     'message': "Increase seats or remove excess attendees",
                 },
             }
-Model constraints
-Odoo provides two ways to set up automatically verified invariants: Python constraints and SQL constraints.
+```
 
-A Python constraint is defined as a method decorated with constrains(), and invoked on a recordset. The decorator specifies which fields are involved in the constraint, so that the constraint is automatically evaluated when one of them is modified. The method is expected to raise an exception if its invariant is not satisfied:
+模型约束
 
+Odoo提供了2种方式来建立自动验证: Python constraints and SQL constraints.
+
+A Python constraint 以 constrains() 定义 ,以记录集调用. 装饰器constrains() 指出哪个字段参与约束 , 修改时会自动计算约束，并抛出异常 :
+
+```python
 from odoo.exceptions import ValidationError
 
 @api.constrains('age')
@@ -1335,11 +1372,15 @@ def _check_something(self):
         if record.age > 20:
             raise ValidationError("Your record is too old: %s" % record.age)
     # all records passed the test, don't return anything
-Exercise
+```
 
-Add Python constraints
-Add a constraint that checks that the instructor is not present in the attendees of his/her own session.
+练习
+
+增加Python约束
+检查讲师不是他／她自己会话的听众.
 openacademy/models.py
+
+```python
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, exceptions
@@ -1355,15 +1396,19 @@ class Course(models.Model):
         for r in self:
             if r.instructor_id and r.instructor_id in r.attendee_ids:
                 raise exceptions.ValidationError("A session's instructor can't be an attendee")
-SQL constraints are defined through the model attribute _sql_constraints. The latter is assigned to a list of triples of strings (name, sql_definition, message), where name is a valid SQL constraint name, sql_definition is a table_constraint expression, and message is the error message.
+```
 
-Exercise
+SQL 通过模型属性 _sql_constraints 定义. The latter is assigned to a list of triples of strings (name, sql_definition, message), where name is a valid SQL constraint name, sql_definition is a table_constraint expression, and message is the error message.
+
+练习
 
 Add SQL constraints
-With the help of PostgreSQL's documentation , add the following constraints:
-CHECK that the course description and the course title are different
-Make the Course's name UNIQUE
+阅读PostgreSQL的文档 , 增加下列约束:
+检查课程描述和标题是不同的，并检查名称是唯一的。
+
 openacademy/models.py
+
+```python
     session_ids = fields.One2many(
         'openacademy.session', 'course_id', string="Sessions")
 
@@ -1380,12 +1425,17 @@ openacademy/models.py
 
 class Session(models.Model):
     _name = 'openacademy.session'
-Exercise
 
-Exercise 6 - Add a duplicate option
-Since we added a constraint for the Course name uniqueness, it is not possible to use the "duplicate" function anymore (Form ‣ Duplicate).
-Re-implement your own "copy" method which allows to duplicate the Course object, changing the original name into "Copy of [original name]".
+```
+
+练习
+
+练习 6 - 增加复制选项
+在我么增加了课程名称唯一后，就不能再使用 复制 功能了 (Form ‣ Duplicate).
+重新实现我们自己的 "复制" 功能，允许复制课程对象 ，改变原有的名称为  "Copy of [original name]".
 openacademy/models.py
+
+```python
     session_ids = fields.One2many(
         'openacademy.session', 'course_id', string="Sessions")
 
@@ -1406,30 +1456,38 @@ openacademy/models.py
     _sql_constraints = [
         ('name_description_check',
          'CHECK(name != description)',
+```
+
 Advanced Views
 Tree views
-Tree views can take supplementary attributes to further customize their behavior:
+列表视图可以使用补充属性来进一步自定义他们的行为 :
 
 decoration-{$name}
-allow changing the style of a row's text based on the corresponding record's attributes.
+允许根据相应记录的属性更改行文本的样式.
 
-Values are Python expressions. For each record, the expression is evaluated with the record's attributes as context values and if true, the corresponding style is applied to the row. Other context values are uid (the id of the current user) and current_date (the current date as a string of the form yyyy-MM-dd).
+值是Python表达式. 对于每条记录而言，使用记录的属性作为上下文值来评估表达式，如果为true，则将对应的样式应用于该行. 其它上下文的值有uid (当前用户的id) current_date (当前日期的yyyy-MM-dd字符串的形式).
 
-{$name} can be bf (font-weight: bold), it (font-style: italic), or any bootstrap contextual color (danger, info, muted, primary, success or warning).
+{$name} can be bf (font-weight: bold), it (font-style: italic), 或者任何bootstrap contextual color (danger, info, muted, primary, success or warning).
 
+```xml
 <tree string="Idea Categories" decoration-info="state=='draft'"
     decoration-danger="state=='trashed'">
     <field name="name"/>
     <field name="state"/>
 </tree>
-editable
-Either "top" or "bottom". Makes the tree view editable in-place (rather than having to go through the form view), the value is the position where new rows appear.
-Exercise
+```
 
-List coloring
-Modify the Session tree view in such a way that sessions lasting less than 5 days are colored blue, and the ones lasting more than 15 days are colored red.
-Modify the session tree view:
+editable
+
+ "top" 和 "bottom" . 可以让列表试图成为可编辑状态 (而不用进入到表单视图), the value is the position where new rows appear.
+
+练习
+
+列出颜色
+修改Session的列表视图持续时间低于5天则显示为蓝色，高于15天则显示为红色
+:
 openacademy/views/openacademy.xml
+```xml
             <field name="name">session.tree</field>
             <field name="model">openacademy.session</field>
             <field name="arch" type="xml">
@@ -1440,32 +1498,43 @@ openacademy/views/openacademy.xml
                     <field name="taken_seats" widget="progressbar"/>
                 </tree>
             </field>
-Calendars
-Displays records as calendar events. Their root element is <calendar> and their most common attributes are:
+```
 
-color
-The name of the field used for color segmentation. Colors are automatically distributed to events, but events in the same color segment (records which have the same value for their @color field) will be given the same color.
-date_start
+日历
+以日历事件显示记录。根元素为`<calendar>` 常见属性有：
+
+- color
+用于颜色分割的字段的名称。 颜色会自动分配到事件，但同一颜色段中的事件（对于@color字段具有相同值的记录）将被赋予相同的颜色。
+
+- date_start
 record's field holding the start date/time for the event
-date_stop (optional)
+
+- date_stop (optional)
 record's field holding the end date/time for the event
 field (to define the label for each calendar event)
 
+```
 <calendar string="Ideas" date_start="invent_date" color="inventor_id">
     <field name="name"/>
 </calendar>
-Exercise
+```
 
-Calendar view
-Add a Calendar view to the Session model enabling the user to view the events associated to the Open Academy.
-Add an end_date field computed from start_date and duration
+练习
 
-Tip
+日历视图
 
-the inverse function makes the field writable, and allows moving the sessions (via drag and drop) in the calendar view
-Add a calendar view to the Session model
-And add the calendar view to the Session model's actions
+将日历视图添加到会话模型，使用户能够查看与该关联的事件 Open Academy.
+增加end_date字段计算start_date和持续时间
+
+提示
+
+the inverse function逆函数使字段可写，并允许在日历视图中移动会话（通过拖放） 
+为Session模型增加日历视图
+为Session模型的动作增加日历视图
+
 openacademy/models.py
+
+```python
 # -*- coding: utf-8 -*-
 
 from datetime import timedelta
@@ -1510,7 +1579,11 @@ class Course(models.Model):
     @api.constrains('instructor_id', 'attendee_ids')
     def _check_instructor_not_in_attendees(self):
         for r in self:
+```
+
 openacademy/views/openacademy.xml
+
+```xml
             </field>
         </record>
 
@@ -1535,22 +1608,25 @@ openacademy/views/openacademy.xml
         </record>
 
         <menuitem id="session_menu" name="Sessions"
-Search views
-Search view <field> elements can have a @filter_domain that overrides the domain generated for searching on the given field. In the given domain, self represents the value entered by the user. In the example below, it is used to search on both fields name and description.
+```
 
-Search views can also contain <filter> elements, which act as toggles for predefined searches. Filters must have one of the following attributes:
+搜索视图
+搜索视图的 `<field>` 元素有 @filter_domain 会覆盖 domain ，用于在给定字段上进行搜索。 在给定domian域中，self表示用户输入的值。 在下面的示例中，它用于搜索两个字段的名称和描述。
 
-domain
-add the given domain to the current search
-context
-add some context to the current search; use the key group_by to group results on the given field name
+搜索视图还包含 `<filter>`元素， 用于触发预定义搜索. 筛选必须至少有下面一个属性：
+
+- domain
+给当前搜索指定domain域
+- context
+为当前搜索增加上下文; 使用键 group_by在给定的字段名上 分组结果 
+
+```xml
 <search string="Ideas">
     <field name="name"/>
     <field name="description" string="Name and description"
            filter_domain="['|', ('name', 'ilike', self), ('description', 'ilike', self)]"/>
     <field name="inventor_id"/>
     <field name="country_id" widget="selection"/>
-
     <filter name="my_ideas" string="My Ideas"
             domain="[('inventor_id', '=', uid)]"/>
     <group string="Group By">
@@ -1558,16 +1634,20 @@ add some context to the current search; use the key group_by to group results on
                 context="{'group_by': 'inventor_id'}"/>
     </group>
 </search>
-To use a non-default search view in an action, it should be linked using the search_view_id field of the action record.
+```
+要在操作中使用非默认搜索视图，应使用操作记录的search_view_id字段进行链接。
 
-The action can also set default values for search fields through its context field: context keys of the form search_default_field_name will initialize field_name with the provided value. Search filters must have an optional @name to have a default and behave as booleans (they can only be enabled by default).
+该操作还可以通过其上下文字段为搜索字段设置默认值：搜索_default_field_name格式的上下文键将使用提供的值初始化field_name。 搜索过滤器必须具有可选的@name以具有默认值，并且表现为布尔值（它们只能在默认情况下启用）。
 
-Exercise
+练习
 
-Search views
-Add a button to filter the courses for which the current user is the responsible in the course search view. Make it selected by default.
-Add a button to group courses by responsible user.
+搜索视图
+添加一个按钮来过滤当前用户在课程搜索视图中负责的课程。 默认选择它。
+添加按钮，由负责的用户对课程进行分组。
+
 openacademy/views/openacademy.xml
+
+```xml
                 <search>
                     <field name="name"/>
                     <field name="description"/>
@@ -1587,21 +1667,27 @@ openacademy/views/openacademy.xml
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">Create the first course
                 </p>
-Gantt
-Horizontal bar charts typically used to show project planning and advancement, their root element is <gantt>.
+```
 
+甘特图
+水平条形图通常用于显示项目规划和进步，它们的根元素是 `<gantt>`.
+
+```xml
 <gantt string="Ideas"
        date_start="invent_date"
        date_stop="date_finished"
        progress="progress"
        default_group_by="inventor_id" />
-Exercise
+```
 
-Gantt charts
-Add a Gantt Chart enabling the user to view the sessions scheduling linked to the Open Academy module. The sessions should be grouped by instructor.
-Create a computed field expressing the session's duration in hours
-Add the gantt view's definition, and add the gantt view to the Session model's action
+
+练习
+甘特图
+添加甘特图，使用户能够查看与Open Academy模块链接的会话调度。 会议应由讲师分组。创建表示会话持续时间（以小时为单位）的计算字段 添加甘特图视图的定义，并将甘特图视图添加到会话模型的操作
+
 openacademy/models.py
+
+```python
     end_date = fields.Date(string="End Date", store=True,
         compute='_get_end_date', inverse='_set_end_date')
 
@@ -1626,7 +1712,11 @@ openacademy/models.py
     @api.constrains('instructor_id', 'attendee_ids')
     def _check_instructor_not_in_attendees(self):
         for r in self:
+
+```        
 openacademy/views/openacademy.xml
+
+```xml
             </field>
         </record>
 
@@ -1650,33 +1740,37 @@ openacademy/views/openacademy.xml
         </record>
 
         <menuitem id="session_menu" name="Sessions"
-Graph views
-Graph views allow aggregated overview and analysis of models, their root element is <graph>.
+```
+
+图形视图
+图形视图允许对模型进行聚合概述和分析，它们的根元素是 `<graph>` .
 
 Note
 
-Pivot views (element <pivot>) a multidimensional table, allows the selection of filers and dimensions to get the right aggregated dataset before moving to a more graphical overview. The pivot view shares the same content definition as graph views.
+Pivot views (element `<pivot>`) a multidimensional table, allows the selection of filers and dimensions to get the right aggregated dataset before moving to a more graphical overview. The pivot view shares the same content definition as graph views.
 Graph views have 4 display modes, the default mode is selected using the @type attribute.
 
 Bar (default)
 a bar chart, the first dimension is used to define groups on the horizontal axis, other dimensions define aggregated bars within each group.
 
-By default bars are side-by-side, they can be stacked by using @stacked="True" on the <graph>
+By default bars are side-by-side, they can be stacked by using @stacked="True" on the `<graph>`
 
 Line
 2-dimensional line chart
 Pie
 2-dimensional pie
-Graph views contain <field> with a mandatory @type attribute taking the values:
+Graph views contain `<field>` with a mandatory @type attribute taking the values:
 
 row (default)
 the field should be aggregated by default
 measure
 the field should be aggregated rather than grouped on
+```
 <graph string="Total idea score by Inventor">
     <field name="inventor_id"/>
     <field name="score" type="measure"/>
 </graph>
+```
 Warning
 
 Graph views perform aggregations on database values, they do not work with non-stored computed fields.
@@ -1687,6 +1781,7 @@ Add a Graph view in the Session object that displays, for each course, the numbe
 Add the number of attendees as a stored computed field
 Then add the relevant view
 openacademy/models.py
+```
     hours = fields.Float(string="Duration in hours",
                          compute='_get_hours', inverse='_set_hours')
 
@@ -1707,7 +1802,10 @@ openacademy/models.py
     @api.constrains('instructor_id', 'attendee_ids')
     def _check_instructor_not_in_attendees(self):
         for r in self:
+```
+
 openacademy/views/openacademy.xml
+```
             </field>
         </record>
 
@@ -1730,8 +1828,9 @@ openacademy/views/openacademy.xml
         </record>
 
         <menuitem id="session_menu" name="Sessions"
+```
 Kanban
-Used to organize tasks, production processes, etc… their root element is <kanban>.
+Used to organize tasks, production processes, etc… their root element is `<kanban>`.
 
 A kanban view shows a set of cards possibly grouped in columns. Each card represents a record, and each column the values of an aggregation field.
 
@@ -1746,6 +1845,9 @@ Add a Kanban view that displays sessions grouped by course (columns are thus cou
 Add an integer color field to the Session model
 Add the kanban view and update the action
 openacademy/models.py
+
+```
+
     duration = fields.Float(digits=(6, 2), help="Duration in days")
     seats = fields.Integer(string="Number of seats")
     active = fields.Boolean(default=True)
@@ -1753,7 +1855,10 @@ openacademy/models.py
 
     instructor_id = fields.Many2one('res.partner', string="Instructor",
         domain=['|', ('instructor', '=', True),
+```
+
 openacademy/views/openacademy.xml
+```
         </record>
 
         <record model="ir.ui.view" id="view_openacad_session_kanban">
@@ -1811,6 +1916,7 @@ openacademy/views/openacademy.xml
 
         <menuitem id="session_menu" name="Sessions"
                   parent="openacademy_menu"
+```
 Workflows
 Workflows are models associated to business objects describing their dynamics. Workflows are also used to track processes that evolve over time.
 
@@ -1828,6 +1934,7 @@ Add a new state field
 Add state-transitioning methods, those can be called from view buttons to change the record's state
 And add the relevant buttons to the session's form view
 openacademy/models.py
+```
     attendees_count = fields.Integer(
         string="Attendees count", compute='_get_attendees_count', store=True)
 
@@ -1852,7 +1959,9 @@ openacademy/models.py
     @api.depends('seats', 'attendee_ids')
     def _taken_seats(self):
         for r in self:
+```
 openacademy/views/openacademy.xml
+```
             <field name="model">openacademy.session</field>
             <field name="arch" type="xml">
                 <form string="Session Form">
@@ -1872,6 +1981,7 @@ openacademy/views/openacademy.xml
                     <sheet>
                         <group>
                             <group string="General">
+```
 Workflows may be associated with any object in Odoo, and are entirely customizable. Workflows are used to structure and manage the lifecycles of business objects and documents, and define transitions, triggers, etc. with graphical tools. Workflows, activities (nodes or actions) and transitions (conditions) are declared as XML records, as usual. The tokens that navigate in workflows are called workitems.
 
 Warning
@@ -1882,6 +1992,7 @@ Exercise
 Workflow
 Replace the ad-hoc Session workflow by a real workflow. Transform the Session form view so its buttons call the workflow instead of the model's methods.
 openacademy/__manifest__.py
+```
         'templates.xml',
         'views/openacademy.xml',
         'views/partner.xml',
@@ -1897,7 +2008,9 @@ openacademy/models.py
 
     @api.multi
     def action_draft(self):
+```
 openacademy/views/openacademy.xml
+```
             <field name="arch" type="xml">
                 <form string="Session Form">
                     <header>
@@ -1911,7 +2024,9 @@ openacademy/views/openacademy.xml
                                 string="Mark as done" states="confirmed"
                                 class="oe_highlight"/>
                         <field name="state" widget="statusbar"/>
+```
 openacademy/views/session_workflow.xml
+```
 <odoo>
     <data>
         <record model="workflow" id="wkf_session">
@@ -1962,6 +2077,7 @@ openacademy/views/session_workflow.xml
         </record>
     </data>
 </odoo>
+```
 Tip
 
 In order to check if instances of the workflow are correctly created alongside sessions, go to Settings ‣ Technical ‣ Workflows ‣ Instances
@@ -1970,6 +2086,7 @@ Exercise
 Automatic transitions
 Automatically transition sessions from Draft to Confirmed when more than half the session's seats are reserved.
 openacademy/views/session_workflow.xml
+```
             <field name="act_to" ref="done"/>
             <field name="signal">done</field>
         </record>
@@ -1981,12 +2098,14 @@ openacademy/views/session_workflow.xml
         </record>
     </data>
 </odoo>
+```
 Exercise
 
 Server actions
 Replace the Python methods for synchronizing session state by server actions.
 Both the workflow and the server actions could have been created entirely from the UI.
 openacademy/views/session_workflow.xml
+```
             <field name="on_create">True</field>
         </record>
 
@@ -2037,6 +2156,7 @@ model.search([('id', 'in', context['active_ids'])]).action_done()
         </record>
 
         <record model="workflow.transition" id="session_draft_to_confirmed">
+```
 Security
 Access control mechanisms must be configured to achieve a coherent security policy.
 
@@ -2046,9 +2166,12 @@ Groups are created as normal records on the model res.groups, and granted menu a
 Access rights
 Access rights are defined as records of the model ir.model.access. Each access right is associated to a model, a group (or no group for global access), and a set of permissions: read, write, create, unlink. Such access rights are usually created by a CSV file named after its model: ir.model.access.csv.
 
+```
 id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
 access_idea_idea,idea.idea,model_idea_idea,base.group_user,1,1,1,0
 access_idea_vote,idea.vote,model_idea_vote,base.group_user,1,1,1,0
+```
+
 Exercise
 
 Add access control through the Odoo interface
@@ -2068,6 +2191,7 @@ Edit the file openacademy/security/ir.model.access.csv with the access rights to
 Finally update openacademy/__manifest__.py to add the new data files to it
 openacademy/__manifest__.py
 
+```
     # always loaded
     'data': [
         'security/security.xml',
@@ -2075,13 +2199,17 @@ openacademy/__manifest__.py
         'templates.xml',
         'views/openacademy.xml',
         'views/partner.xml',
+```
 openacademy/security/ir.model.access.csv
+```
 id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
 course_manager,course manager,model_openacademy_course,group_manager,1,1,1,1
 session_manager,session manager,model_openacademy_session,group_manager,1,1,1,1
 course_read_all,course all,model_openacademy_course,,1,0,0,0
 session_read_all,session all,model_openacademy_session,,1,0,0,0
+```
 openacademy/security/security.xml
+```
 <odoo>
     <data>
         <record id="group_manager" model="res.groups">
@@ -2089,11 +2217,12 @@ openacademy/security/security.xml
         </record>
     </data>
 </odoo>
+```
 Record rules
 A record rule restricts the access rights to a subset of records of the given model. A rule is a record of the model ir.rule, and is associated to a model, a number of groups (many2many field), permissions to which the restriction applies, and a domain. The domain specifies to which records the access rights are limited.
 
 Here is an example of a rule that prevents the deletion of leads that are not in state cancel. Notice that the value of the field groups must follow the same convention as the method write() of the ORM.
-
+```
 <record id="delete_cancelled_only" model="ir.rule">
     <field name="name">Only cancelled leads may be deleted</field>
     <field name="model_id" ref="crm.model_crm_lead"/>
@@ -2104,12 +2233,14 @@ Here is an example of a rule that prevents the deletion of leads that are not in
     <field name="perm_unlink" eval="1" />
     <field name="domain_force">[('state','=','cancel')]</field>
 </record>
+```
 Exercise
 
 Record rule
 Add a record rule for the model Course and the group "OpenAcademy / Manager", that restricts write and unlink accesses to the responsible of a course. If a course has no responsible, all users of the group must be able to modify it.
 Create a new rule in openacademy/security/security.xml:
 openacademy/security/security.xml
+```
         <record id="group_manager" model="res.groups">
             <field name="name">OpenAcademy / Manager</field>
         </record>
@@ -2129,6 +2260,8 @@ openacademy/security/security.xml
         </record>
     </data>
 </odoo>
+```
+
 Wizards
 Wizards describe interactive sessions with the user (or dialog boxes) through dynamic forms. A wizard is simply a model that extends the class TransientModel instead of Model. The class TransientModel extends Model and reuse all its existing mechanisms, with the following particularities:
 
@@ -2143,6 +2276,7 @@ Define the wizard
 Create a wizard model with a many2one relationship with the Session model and a many2many relationship with the Partner model.
 Add a new file openacademy/wizard.py:
 openacademy/__init__.py
+```
 from . import controllers
 from . import models
 from . import partner
@@ -2158,11 +2292,12 @@ class Wizard(models.TransientModel):
     session_id = fields.Many2one('openacademy.session',
         string="Session", required=True)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
+```
 Launching wizards
 Wizards are launched by ir.actions.act_window records, with the field target set to the value new. The latter opens the wizard view into a popup window. The action may be triggered by a menu item.
 
 There is another way to launch the wizard: using an ir.actions.act_window record like above, but with an extra field src_model that specifies in the context of which model the action is available. The wizard will appear in the contextual actions of the model, above the main view. Because of some internal hooks in the ORM, such an action is declared in XML with the tag act_window.
-
+```
 <act_window id="launch_the_wizard"
             name="Launch the Wizard"
             src_model="context.model.name"
@@ -2170,6 +2305,7 @@ There is another way to launch the wizard: using an ir.actions.act_window record
             view_mode="form"
             target="new"
             key2="client_action_multi"/>
+```
 Wizards use regular views and their buttons may use the attribute special="cancel" to close the wizard window without saving.
 
 Exercise
@@ -2179,6 +2315,7 @@ Define a form view for the wizard.
 Add the action to launch it in the context of the Session model.
 Define a default value for the session field in the wizard; use the context parameter self._context to retrieve the current session.
 openacademy/wizard.py
+```
 class Wizard(models.TransientModel):
     _name = 'openacademy.wizard'
 
@@ -2188,7 +2325,9 @@ class Wizard(models.TransientModel):
     session_id = fields.Many2one('openacademy.session',
         string="Session", required=True, default=_default_session)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
+```
 openacademy/views/openacademy.xml
+```
                   parent="openacademy_menu"
                   action="session_list_action"/>
 
@@ -2214,11 +2353,13 @@ openacademy/views/openacademy.xml
                     key2="client_action_multi"/>
     </data>
 </odoo>
+```
 Exercise
 
 Register attendees
 Add buttons to the wizard, and implement the corresponding method for adding the attendees to the given session.
 openacademy/views/openacademy.xml
+```
                         <field name="attendee_ids"/>
                     </group>
                     <footer>
@@ -2230,7 +2371,9 @@ openacademy/views/openacademy.xml
                 </form>
             </field>
         </record>
+```
 openacademy/wizard.py
+```
     session_id = fields.Many2one('openacademy.session',
         string="Session", required=True, default=_default_session)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
@@ -2239,11 +2382,13 @@ openacademy/wizard.py
     def subscribe(self):
         self.session_id.attendee_ids |= self.attendee_ids
         return {}
+```
 Exercise
 
 Register attendees to multiple sessions
 Modify the wizard model so that attendees can be registered to multiple sessions.
 openacademy/views/openacademy.xml
+```
                 <form string="Add Attendees">
                     <group>
                         <field name="session_ids"/>
@@ -2251,7 +2396,10 @@ openacademy/views/openacademy.xml
                     </group>
                     <footer>
                         <button name="subscribe" type="object"
+```
 openacademy/wizard.py
+
+```
 class Wizard(models.TransientModel):
     _name = 'openacademy.wizard'
 
@@ -2267,7 +2415,10 @@ class Wizard(models.TransientModel):
         for session in self.session_ids:
             session.attendee_ids |= self.attendee_ids
         return {}
+```
+
 Internationalization
+
 Each module can provide its own translations within the i18n directory, by having files named LANG.po where LANG is the locale code for the language, or the language and country combination when they differ (e.g. pt.po or pt_BR.po). Translations will be loaded automatically by Odoo for all enabled languages. Developers always use English when creating a module, then export the module terms using Odoo's gettext POT export feature (Settings ‣ Translations ‣ Import/Export ‣ Export Translation without specifying a language), to create the module template POT file, and then derive the translated PO files. Many IDE's have plugins or modes for editing and merging PO/POT files.
 
 Tip
@@ -2295,6 +2446,8 @@ Open the exported translation file (with a basic text editor or a dedicated PO-f
 In models.py, add an import statement for the function odoo._ and mark missing strings as translatable
 Repeat steps 3-6
 openacademy/models.py
+
+```
 # -*- coding: utf-8 -*-
 
 from datetime import timedelta
@@ -2332,14 +2485,17 @@ class Course(models.Model):
         for r in self:
             if r.instructor_id and r.instructor_id in r.attendee_ids:
                 raise exceptions.ValidationError(_("A session's instructor can't be an attendee"))
+```
+
 Reporting
 Printed reports
 Odoo 8.0 comes with a new report engine based on QWeb, Twitter Bootstrap and Wkhtmltopdf.
 
 A report is a combination two elements:
 
-an ir.actions.report.xml, for which a <report> shortcut element is provided, it sets up various basic parameters for the report (default type, whether the report should be saved to the database after generation,…)
+an ir.actions.report.xml, for which a `<report>` shortcut element is provided, it sets up various basic parameters for the report (default type, whether the report should be saved to the database after generation,…)
 
+```
 <report
     id="account_invoices"
     model="account.invoice"
@@ -2351,6 +2507,7 @@ an ir.actions.report.xml, for which a <report> shortcut element is provided, it 
     attachment="(object.state in ('open','paid')) and
         ('INV'+(object.number or '').replace('/','')+'.pdf')"
 />
+
 A standard QWeb view for the actual report:
 
 <t t-call="report.html_container">
@@ -2362,6 +2519,7 @@ A standard QWeb view for the actual report:
         </t>
     </t>
 </t>
+```
 
 the standard rendering context provides a number of elements, the most
 important being:
@@ -2384,6 +2542,8 @@ Exercise
 Create a report for the Session model
 For each session, it should display session's name, its start and end, and list the session's attendees.
 openacademy/__manifest__.py
+
+```
         'views/openacademy.xml',
         'views/partner.xml',
         'views/session_workflow.xml',
@@ -2391,7 +2551,11 @@ openacademy/__manifest__.py
     ],
     # only loaded in demonstration mode
     'demo': [
+
+```    
 openacademy/reports.xml
+
+```
 <odoo>
 <data>
     <report
@@ -2422,6 +2586,8 @@ openacademy/reports.xml
     </template>
 </data>
 </odoo>
+```
+
 Dashboards
 Exercise
 
@@ -2434,6 +2600,7 @@ Note
 Available dashboard styles are 1, 1-1, 1-2, 2-1 and 1-1-1
 Update openacademy/__manifest__.py to reference the new data file
 openacademy/__manifest__.py
+```
     'version': '0.1',
 
     # any module necessary for this one to work correctly
@@ -2447,8 +2614,10 @@ openacademy/__manifest__.py
         'views/session_board.xml',
         'reports.xml',
     ],
+```
     # only loaded in demonstration mode
 openacademy/views/session_board.xml
+```
 <?xml version="1.0"?>
 <odoo>
     <data>
@@ -2515,6 +2684,8 @@ openacademy/views/session_board.xml
             id="menu_board_session" icon="terp-graph"/>
     </data>
 </odoo>
+```
+
 WebServices
 The web-service module offer a common interface for all web-services :
 
@@ -2527,12 +2698,15 @@ Odoo is accessible through XML-RPC/JSON-RPC interfaces, for which libraries exis
 XML-RPC Library
 The following example is a Python program that interacts with an Odoo server with the library xmlrpclib:
 
+```
+
 import xmlrpclib
 
 root = 'http://%s:%d/xmlrpc/' % (HOST, PORT)
 
 uid = xmlrpclib.ServerProxy(root + 'common').login(DB, USER, PASS)
 print "Logged in as %s (uid: %d)" % (USER, uid)
+
 
 # Create a new note
 sock = xmlrpclib.ServerProxy(root + 'object')
@@ -2543,9 +2717,12 @@ args = {
 }
 note_id = sock.execute(DB, uid, PASS, 'note.note', 'create', args)
 Exercise
+```
 
 Add a new service to the client
 Write a Python program able to send XML-RPC requests to a PC running Odoo (yours, or your instructor's). This program should display all the sessions, and their corresponding number of seats. It should also create a new session for one of the courses.
+
+```
 import functools
 import xmlrpclib
 HOST = 'localhost'
@@ -2554,6 +2731,7 @@ DB = 'openacademy'
 USER = 'admin'
 PASS = 'admin'
 ROOT = 'http://%s:%d/xmlrpc/' % (HOST,PORT)
+
 
 # 1. Login
 uid = xmlrpclib.ServerProxy(ROOT + 'common').login(DB,USER,PASS)
@@ -2639,6 +2817,8 @@ args = {
 }
 note_id = invoke('note.note', 'create', args)
 Examples can be easily adapted from XML-RPC to JSON-RPC.
+
+```
 
 Note
 
